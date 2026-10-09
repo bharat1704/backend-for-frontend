@@ -1,0 +1,26 @@
+{
+  "name": "backend-for-frontend-demo",
+  "version": "1.0.0",
+  "description": "A beginner-friendly project demonstrating the Backend For Frontend (BFF) architectural pattern",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test:demo": "node test-demo.js",
+    "start:services": "node services/server.js",
+    "start:bff": "node bff/server.js"
+  },
+  "keywords": [
+    "bff",
+    "backend-for-frontend",
+    "microservices",
+    "express",
+    "architecture",
+    "api-gateway"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

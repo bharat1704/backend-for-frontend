@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Backend For Frontend (BFF) Pattern Demo</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <header class="header">
+      <div class="badge-pill">Architectural Pattern</div>
+      <h1>Backend For Frontend (BFF)</h1>
+      <p class="subtitle">
+        See how tailoring backend APIs specifically for different clients (Mobile vs. Web) solves over-fetching, roundtrip latency, and security leaks.
+      </p>
+    </header>
+
+    <!-- Architecture Visual Flow -->
+    <section class="architecture-card">
+      <div class="card-header">
+        <h3>Architecture Overview</h3>
+        <span class="tag">Dual BFF Setup</span>
+      </div>
+      <div class="diagram-grid">
+        <div class="diagram-box client-box">
+          <div class="icon">📱</div>
+          <strong>Mobile App</strong>
+          <span>Limited bandwidth & screen</span>
+        </div>
+        <div class="arrow">➜</div>
+        <div class="diagram-box bff-box mobile-theme">
+          <strong>Mobile BFF</strong>
+          <small>:5000/api/mobile/*</small>
+          <span>Aggregates & strips data</span>
+        </div>
+        <div class="arrow">➜</div>
+        <div class="diagram-box microservices-box">
+          <strong>Core Microservices</strong>
+          <small>:4000/services/*</small>
+          <div class="ms-list">
+            <span>👤 Users</span>
+            <span>📦 Orders</span>
+            <span>✨ Products</span>
+          </div>
+        </div>
+        <div class="arrow">⬅</div>
+        <div class="diagram-box bff-box web-theme">
+          <strong>Web BFF</strong>
+          <small>:5000/api/web/*</small>
+          <span>Rich desktop tables & specs</span>
+        </div>
+        <div class="arrow">⬅</div>
+        <div class="diagram-box client-box">
+          <div class="icon">💻</div>
+          <strong>Web App</strong>
+          <span>High-res desktop layout</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Simulator Controls -->
+    <div class="controls-card">
+      <div class="controls-nav">
+        <button id="btn-direct" class="nav-btn" onclick="fetchScenario('direct')">
+          <span class="btn-icon">⚡</span>
+          <div>
+            <strong>1. Direct Microservices</strong>
+            <small>Client makes 3 separate calls (Anti-pattern)</small>
+          </div>
+        </button>
+        <button id="btn-mobile" class="nav-btn active" onclick="fetchScenario('mobile')">
+          <span class="btn-icon">📱</span>
+          <div>
+            <strong>2. Mobile BFF Call</strong>
+            <small>1 lightweight call tailored for phones</small>
+          </div>
+        </button>
+        <button id="btn-web" class="nav-btn" onclick="fetchScenario('web')">
+          <span class="btn-icon">💻</span>
+          <div>
+            <strong>3. Web Desktop BFF Call</strong>
+            <small>1 rich call tailored for desktop</small>
+          </div>
+        </button>
+        <button id="btn-matrix" class="nav-btn" onclick="fetchScenario('matrix')">
+          <span class="btn-icon">📊</span>
+          <div>
+            <strong>4. Side-by-Side Matrix</strong>
+            <small>Compare all 3 approaches</small>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Performance & Security Stats -->
+    <section class="stats-grid" id="stats-container">
+      <div class="stat-card">
+        <span class="stat-label">Client Network Requests</span>
+        <div class="stat-value" id="stat-requests">1</div>
+        <span class="stat-sub" id="stat-requests-sub">Down from 3 requests</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Payload Size</span>
+        <div class="stat-value" id="stat-size">~0.7 KB</div>
+        <span class="stat-sub text-success" id="stat-size-sub">~82% bandwidth saved</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Security & Privacy</span>
+        <div class="stat-value text-safe" id="stat-security">Sanitized</div>
+        <span class="stat-sub" id="stat-security-sub">Sensitive credentials stripped</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">UI Processing Effort</span>
+        <div class="stat-value" id="stat-effort">Zero</div>
+        <span class="stat-sub" id="stat-effort-sub">Ready to render directly</span>
+      </div>
+    </section>
+
+    <!-- Main Output View -->
+    <main class="content-grid" id="main-content">
+      <!-- Left: Visual UI Preview of what the Client renders -->
+      <section class="preview-panel">
+        <div class="panel-header">
+          <h4 id="preview-title">Client UI Render Preview</h4>
+          <span class="status-indicator live">Simulated Client</span>
+        </div>
+        <div class="preview-canvas" id="preview-canvas">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- Right: Actual Raw JSON Response received over the wire -->
+      <section class="json-panel">
+        <div class="panel-header">
+          <div class="panel-header-left">
+            <h4>Network Payload (JSON)</h4>
+            <span class="endpoint-chip" id="endpoint-chip">GET /api/mobile/dashboard/usr_101</span>
+          </div>
+          <button class="copy-btn" onclick="copyJson()">Copy JSON</button>
+        </div>
+        <pre class="json-viewer"><code id="json-code">Loading...</code></pre>
+      </section>
+    </main>
+
+    <!-- Matrix Comparison Table (hidden unless selected) -->
+    <section class="matrix-panel" id="matrix-panel" style="display: none;">
+      <h3>Full Architectural Comparison</h3>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Metric / Dimension</th>
+            <th class="col-bad">❌ Direct Microservices</th>
+            <th class="col-mobile">📱 Mobile BFF</th>
+            <th class="col-web">💻 Web BFF</th>
+          </tr>
+        </thead>
+        <tbody id="matrix-tbody">
+          <!-- Filled dynamically -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Key Takeaways Footer -->
+    <footer class="footer-card">
+      <h3>Why BFF is so popular in modern engineering:</h3>
+      <div class="takeaways-grid">
+        <div class="takeaway-item">
+          <strong>1. Single Network Roundtrip</strong>
+          <p>Clients make 1 single call to their BFF. The BFF orchestrates multiple downstream microservices over blazing-fast internal datacenter networks.</p>
+        </div>
+        <div class="takeaway-item">
+          <strong>2. Client Ownership</strong>
+          <p>The Mobile team maintains the Mobile BFF, and the Web team maintains the Web BFF. Frontends never get blocked waiting for shared core teams to change generic APIs.</p>
+        </div>
+        <div class="takeaway-item">
+          <strong>3. Zero Data Leaks</strong>
+          <p>Downstream microservices frequently return hashed passwords, internal ledger keys, or profit margins. The BFF strips these before crossing the public internet.</p>
+        </div>
+        <div class="takeaway-item">
+          <strong>4. Independent Evolution</strong>
+          <p>Core microservices can refactor internal database schemas without breaking native mobile apps already published in iOS & Android App Stores.</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
